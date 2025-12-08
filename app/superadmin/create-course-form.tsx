@@ -1,6 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 
 type ModuleInput = { title: string; type?: string; videoUrl?: string }
 
@@ -14,6 +15,27 @@ export default function CreateCourseForm({ onCreated }: Props) {
   const [thumbnail, setThumbnail] = useState("")
   const [modules, setModules] = useState<ModuleInput[]>([])
   const [loading, setLoading] = useState(false)
+  const router = useRouter()
+
+  // Prefill module names from site settings when the form loads
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch('/api/superadmin/settings')
+        if (!res.ok) return
+        const json = await res.json()
+        if (!mounted) return
+        const names: string[] = json?.moduleNames || []
+        if (names.length && modules.length === 0) {
+          setModules(names.map((n) => ({ title: n, type: 'video', videoUrl: '' })))
+        }
+      } catch (e) {
+        // ignore
+      }
+    })()
+    return () => { mounted = false }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -32,6 +54,13 @@ export default function CreateCourseForm({ onCreated }: Props) {
       setThumbnail("")
       setModules([])
       onCreated?.(data)
+      // Redirect to the new course's admin/dashboard page so the creator can edit content
+      try {
+        router.push(`/dashboard/courses/${data.id}`)
+      } catch (err) {
+        // fallback to full navigation
+        try { window.location.assign(`/dashboard/courses/${data.id}`) } catch {}
+      }
     } catch (err) {
       console.error(err)
       alert("Failed to create course")

@@ -1,19 +1,30 @@
+# Dependencies
 node_modules/
+
+# Build output
 .next/
+out/
 dist/
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-.DS_Store
+
+# Env
 .env
-.env.*
+.env.local
+.env.development
+.env.production
+.env.test
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor stuff
 .vscode/
-/.pnp*
-package-lock.json
-coverage/
-/.idea/
-/.cache/
-logs/
-*.log
-/.turbo/
+.idea/
+
+# Misc
+*.swp

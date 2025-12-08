@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { ChevronDown, CheckCircle2, Lock, Play } from "lucide-react"
 
 type ID = string | number

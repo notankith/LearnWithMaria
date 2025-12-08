@@ -7,21 +7,38 @@ export default function ModerateCourses({ courses, onDelete }: { courses: any[];
   return (
     <div>
       <h3 className="text-lg font-semibold mb-3">Moderate Courses</h3>
-      <div className="space-y-3">
-        {courses.length === 0 && <div className="text-sm text-slate-500">No courses</div>}
-        {courses.map((c) => (
-          <div key={c.id} className="p-3 bg-slate-50 rounded-md flex items-center justify-between">
-            <div>
-              <div className="font-medium">{c.title}</div>
-              <div className="text-xs text-slate-500">{c.description}</div>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link href={`/superadmin/courses/${c.id}/edit`} className="text-sm text-blue-600">Edit</Link>
-              <button onClick={() => onDelete(c.id)} className="text-sm text-red-600">Delete</button>
-            </div>
-          </div>
-        ))}
-      </div>
+
+      {courses.length === 0 ? (
+        <div className="text-sm text-slate-500">No courses</div>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="text-sm text-slate-600 border-b">
+                <th className="py-2">Title</th>
+                <th className="py-2">Description</th>
+                <th className="py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {courses.map((c) => (
+                <tr key={c.id} className="hover:bg-slate-50">
+                  <td className="py-3 align-top w-1/3">
+                    <div className="font-medium">{c.title}</div>
+                  </td>
+                  <td className="py-3 align-top text-sm text-slate-500">{c.description || "—"}</td>
+                  <td className="py-3 align-top">
+                    <div className="flex items-center gap-3">
+                      <Link href={`/superadmin/courses/${c.id}/edit`} className="text-sm text-blue-600">Edit</Link>
+                      <button onClick={() => onDelete(c.id)} className="text-sm text-red-600">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   )
 }

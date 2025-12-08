@@ -16,7 +16,9 @@ type Course = {
 
 export default function SuperAdminPage() {
   const [courses, setCourses] = useState<Course[]>([])
+  const [usersCount, setUsersCount] = useState<number | null>(null)
   const [loading, setLoading] = useState(false)
+  const [query, setQuery] = useState("")
 
   const fetchCourses = async () => {
     setLoading(true)
@@ -34,6 +36,17 @@ export default function SuperAdminPage() {
 
   useEffect(() => {
     fetchCourses()
+    // fetch user count for top stats
+    ;(async () => {
+      try {
+        const r = await fetch("/api/superadmin/users")
+        if (!r.ok) return
+        const u = await r.json()
+        if (Array.isArray(u)) setUsersCount(u.length)
+      } catch (e) {
+        // ignore
+      }
+    })()
   }, [])
 
   const handleCreated = (course: Course) => {
@@ -81,32 +94,66 @@ export default function SuperAdminPage() {
 
         <main className="col-span-12 md:col-span-9 lg:col-span-10">
           <div className="bg-white rounded-xl p-6 shadow-sm border">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-2xl font-bold">Super Admin Panel</h1>
+                <p className="text-sm text-slate-600">Manage courses, users, and site settings from one place.</p>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search courses or users..." className="px-3 py-2 border rounded-md" />
+                <button onClick={fetchCourses} className="px-3 py-2 bg-slate-100 rounded-md">Refresh</button>
+              </div>
+            </div>
+
+            {/* Top Stats */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+              <div className="p-4 bg-white rounded shadow-sm border flex flex-col">
+                <div className="text-sm text-slate-500">Courses</div>
+                <div className="text-2xl font-bold mt-2">{courses.length}</div>
+              </div>
+              <div className="p-4 bg-white rounded shadow-sm border flex flex-col">
+                <div className="text-sm text-slate-500">Users</div>
+                <div className="text-2xl font-bold mt-2">{usersCount ?? "—"}</div>
+              </div>
+              <div className="p-4 bg-white rounded shadow-sm border flex flex-col">
+                <div className="text-sm text-slate-500">Pending Reviews</div>
+                <div className="text-2xl font-bold mt-2">0</div>
+              </div>
+            </div>
+
+            {/* Content */}
             {active === "create" && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="md:col-span-2">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold">Courses</h2>
-                    <button onClick={fetchCourses} className="text-sm text-slate-600">Refresh</button>
-                  </div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <h2 className="text-lg font-semibold mb-3">Courses</h2>
 
                   {loading ? (
                     <p>Loading…</p>
                   ) : (
-                    <ul className="space-y-3">
-                      {courses.length === 0 && <li className="text-sm text-slate-500">No courses yet.</li>}
-                      {courses.map((c) => (
-                        <li key={c.id} className="p-3 bg-slate-50 rounded-md flex items-start justify-between">
-                          <div>
-                            <div className="font-medium">{c.title}</div>
-                            {c.description && <div className="text-sm text-slate-500">{c.description}</div>}
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Link href={`/dashboard/courses/${c.id}`} className="text-sm text-blue-600">Open</Link>
-                            <button className="text-sm text-red-600" onClick={() => handleDelete(c.id)}>Delete</button>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                    <div className="space-y-3">
+                      {courses.filter((c) => c.title.toLowerCase().includes(query.toLowerCase())).length === 0 && (
+                        <div className="text-sm text-slate-500">No courses match your search.</div>
+                      )}
+
+                      <div className="divide-y">
+                        {courses
+                          .filter((c) => c.title.toLowerCase().includes(query.toLowerCase()))
+                          .map((c) => (
+                            <div key={c.id} className="p-4 hover:bg-slate-50 rounded-md flex items-center justify-between">
+                              <div>
+                                <div className="font-medium">{c.title}</div>
+                                {c.description && <div className="text-sm text-slate-500">{c.description}</div>}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <Link href={`/dashboard/courses/${c.id}`} className="text-sm text-blue-600">Open</Link>
+                                <button className="text-sm text-red-600" onClick={() => handleDelete(c.id)}>Delete</button>
+                              </div>
+                            </div>
+                          ))}
+                      </div>
+                    </div>
                   )}
                 </div>
 
