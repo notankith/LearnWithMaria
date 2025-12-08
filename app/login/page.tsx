@@ -42,7 +42,7 @@ export default function LoginPage() {
         {/* Header */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <BookOpen className="w-8 h-8 text-blue-600" />
-          <span className="text-2xl font-bold text-slate-900">LinguaFlow</span>
+          <span className="text-2xl font-bold text-slate-900">LearnWithMaria</span>
         </div>
 
         {/* Card */}

@@ -3,38 +3,66 @@
 import { useState } from "react"
 import { ChevronDown, CheckCircle2, Lock, Play } from "lucide-react"
 
+type ID = string | number
+
 interface Lesson {
-  id: number
-  title: string
-  duration: number
-  type: string
-  completed: boolean
+  id: ID
+  title?: string
+  duration?: number
+  type?: string
+  completed?: boolean
 }
 
 interface Course {
   id: string
-  title: string
-  progress: number
-  lessons: Lesson[]
+  title?: string
+  progress?: number
+  lessons?: Lesson[]
+  modules?: Lesson[]
 }
 
 interface CourseContentProps {
-  course: Course
-  currentLessonId: number
-  setCurrentLessonId: (id: number) => void
+  course: Course | null | undefined
+  currentLessonId: ID | null | undefined
+  setCurrentLessonId: (id: ID) => void
 }
 
 export default function CourseContent({ course, currentLessonId, setCurrentLessonId }: CourseContentProps) {
-  const [expandedSections, setExpandedSections] = useState<number[]>([0])
+  const [expandedSections, setExpandedSections] = useState<ID[]>([0])
 
   const toggleSection = (index: number) => {
     setExpandedSections((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]))
   }
 
+  const lessons = course?.lessons ?? course?.modules ?? []
+
+  const [moduleNames, setModuleNames] = useState<string[] | null>(null)
+
+  // Load site settings for module names
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const res = await fetch("/api/superadmin/settings")
+        if (res.ok) {
+          const json = await res.json()
+          if (mounted && json.moduleNames) setModuleNames(json.moduleNames)
+        }
+      } catch (err) {
+        // ignore - fall back to defaults
+      }
+    })()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  const names = moduleNames ?? ["Module 1: Foundations", "Module 2: Speaking", "Module 3: Grammar & Vocabulary"]
+
   const sections = [
-    { title: "Module 1: Foundations", lessons: course.lessons.slice(0, 2) },
-    { title: "Module 2: Speaking", lessons: course.lessons.slice(2, 4) },
-    { title: "Module 3: Grammar & Vocabulary", lessons: course.lessons.slice(4, 6) },
+    { title: names[0] ?? "Module 1: Foundations", lessons: lessons.slice(0, 2) },
+    { title: names[1] ?? "Module 2: Speaking", lessons: lessons.slice(2, 4) },
+    { title: names[2] ?? "Module 3: Grammar & Vocabulary", lessons: lessons.slice(4, 6) },
   ]
 
   return (
@@ -70,16 +98,16 @@ export default function CourseContent({ course, currentLessonId, setCurrentLesso
               <div className="divide-y divide-slate-100 bg-slate-50">
                 {section.lessons.map((lesson) => (
                   <button
-                    key={lesson.id}
-                    onClick={() => setCurrentLessonId(lesson.id)}
+                    key={String(lesson.id)}
+                    onClick={() => setCurrentLessonId(lesson.id as ID)}
                     className={`w-full px-6 py-4 flex items-center gap-3 text-left transition ${
-                      currentLessonId === lesson.id ? "bg-blue-50 border-l-4 border-blue-600" : "hover:bg-slate-100"
+                      String(currentLessonId) === String(lesson.id) ? "bg-blue-50 border-l-4 border-blue-600" : "hover:bg-slate-100"
                     }`}
                   >
-                    <div className="flex-shrink-0">
+                    <div className="shrink-0">
                       {lesson.completed ? (
                         <CheckCircle2 className="w-5 h-5 text-green-600" />
-                      ) : currentLessonId === lesson.id ? (
+                      ) : String(currentLessonId) === String(lesson.id) ? (
                         <Play className="w-5 h-5 text-blue-600" />
                       ) : (
                         <Lock className="w-5 h-5 text-slate-400" />
@@ -87,11 +115,11 @@ export default function CourseContent({ course, currentLessonId, setCurrentLesso
                     </div>
                     <div className="flex-1 min-w-0">
                       <p
-                        className={`text-sm font-medium truncate ${currentLessonId === lesson.id ? "text-blue-600" : "text-slate-900"}`}
+                        className={`text-sm font-medium truncate ${String(currentLessonId) === String(lesson.id) ? "text-blue-600" : "text-slate-900"}`}
                       >
                         {lesson.title}
                       </p>
-                      <p className="text-xs text-slate-500">{lesson.duration} min</p>
+                      <p className="text-xs text-slate-500">{lesson.duration ?? ""} min</p>
                     </div>
                   </button>
                 ))}
