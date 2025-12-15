@@ -1,13 +1,13 @@
-import { getCurrentUser } from "@/app/actions/auth"
+import { getSession } from "@/lib/session"
 import { redirect } from "next/navigation"
 import DashboardContent from "@/components/dashboard/dashboard-content"
 
 export default async function DashboardPage() {
-  const user = await getCurrentUser()
+  const session = await getSession()
 
-  if (!user) {
+  if (!session || !session.userId || session.role !== "student") {
     redirect("/login")
   }
 
-  return <DashboardContent user={user} />
+  return <DashboardContent userId={session.userId} email={session.email!} />
 }

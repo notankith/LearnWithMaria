@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { BarChart3, BookOpen, Mic } from "lucide-react"
+import { BarChart3, BookOpen } from "lucide-react"
 
 interface DashboardNavProps {
   activeSection: string
@@ -12,7 +12,7 @@ export default function DashboardNav({ activeSection, setActiveSection }: Dashbo
   const navItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
     { id: "courses", label: "My Courses", icon: BookOpen },
-    { id: "tests", label: "Practice Tests", icon: Mic },
+    { id: "explore", label: "Explore Courses", icon: BookOpen },
     { id: "progress", label: "Progress", icon: BarChart3 },
   ]
 

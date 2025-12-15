@@ -1,4 +1,3 @@
-import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
 
 export async function middleware(request: NextRequest) {
@@ -8,46 +7,27 @@ export async function middleware(request: NextRequest) {
     },
   })
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
-        },
-      },
-    },
-  )
+  // Simple session presence check (cookie named "session").
+  // This avoids depending on Supabase in middleware so dev can run.
+  // A proper session validation against MongoDB will be implemented next.
+  const sessionCookie = request.cookies.get("session")?.value
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  // Protect dashboard and admin routes
+  // Protect dashboard routes
   if (request.nextUrl.pathname.startsWith("/dashboard")) {
-    if (!user) {
+    if (!sessionCookie) {
       return NextResponse.redirect(new URL("/login", request.url))
     }
   }
 
+  // Protect admin routes (presence check only for now)
   if (request.nextUrl.pathname.startsWith("/admin")) {
-    if (!user) {
+    if (!sessionCookie) {
       return NextResponse.redirect(new URL("/login", request.url))
-    }
-    // Check if user is admin
-    const { data: userData } = await supabase.from("users").select("role").eq("id", user.id).single()
-
-    if (userData?.role !== "admin" && userData?.role !== "instructor") {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
     }
   }
 
   // Redirect authenticated users away from login/signup
-  if ((request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") && user) {
+  if ((request.nextUrl.pathname === "/login" || request.nextUrl.pathname === "/signup") && sessionCookie) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
@@ -56,13 +36,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public folder
-     */
     "/((?!_next/static|_next/image|favicon.ico|public).*)",
   ],
 }

@@ -1,23 +1,19 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { BookOpen, Mail, Lock, User, ArrowRight, CheckCircle2 } from "lucide-react"
-import { signUp } from "@/app/actions/auth"
-import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
+  const router = useRouter()
   const [fullName, setFullName] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
-  const [role, setRole] = useState<"student" | "instructor">("student")
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
-
-  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -34,19 +30,29 @@ export default function SignupPage() {
     }
 
     setLoading(true)
-    const result = await signUp(email, password, fullName, role)
-    if (result?.error) {
-      setError(result.error)
+
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, fullName }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || "Signup failed")
+        setLoading(false)
+        return
+      }
+
+      // Redirect to dashboard
+      router.push("/dashboard")
+      router.refresh()
+    } catch (err) {
+      setError("An error occurred. Please try again.")
       setLoading(false)
-      return
     }
-    if (result?.redirect) {
-      // navigate on the client
-      setLoading(false)
-      router.push(result.redirect)
-      return
-    }
-    setLoading(false)
   }
 
   return (
@@ -55,7 +61,7 @@ export default function SignupPage() {
         {/* Header */}
         <div className="flex items-center justify-center gap-2 mb-8">
           <BookOpen className="w-8 h-8 text-blue-600" />
-          <span className="text-2xl font-bold text-slate-900">LearnWithMaria</span>
+          <span className="text-2xl font-bold text-slate-900">LinguaFlow</span>
         </div>
 
         {/* Card */}
@@ -97,35 +103,6 @@ export default function SignupPage() {
                   className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
-              </div>
-            </div>
-
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-medium text-slate-900 mb-2">I am a...</label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole("student")}
-                  className={`px-4 py-2.5 rounded-lg font-medium transition border-2 ${
-                    role === "student"
-                      ? "border-blue-600 bg-blue-50 text-blue-600"
-                      : "border-slate-300 text-slate-600 hover:border-slate-400"
-                  }`}
-                >
-                  Student
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole("instructor")}
-                  className={`px-4 py-2.5 rounded-lg font-medium transition border-2 ${
-                    role === "instructor"
-                      ? "border-blue-600 bg-blue-50 text-blue-600"
-                      : "border-slate-300 text-slate-600 hover:border-slate-400"
-                  }`}
-                >
-                  Instructor
-                </button>
               </div>
             </div>
 
@@ -203,10 +180,6 @@ export default function SignupPage() {
           By creating an account, you agree to our{" "}
           <a href="#" className="text-blue-600 hover:text-blue-700">
             Terms of Service
-          </a>{" "}
-          and{" "}
-          <a href="#" className="text-blue-600 hover:text-blue-700">
-            Privacy Policy
           </a>
         </p>
       </div>

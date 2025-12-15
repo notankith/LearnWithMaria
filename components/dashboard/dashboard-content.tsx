@@ -1,16 +1,62 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { BookOpen, Mic, PenTool, LogOut } from "lucide-react"
+import { BookOpen, PenTool, LogOut, Mic } from "lucide-react"
 import { signOut } from "@/app/actions/auth"
 import DashboardNav from "./dashboard-nav"
 import EnrolledCourses from "./enrolled-courses"
-import RecentTests from "./recent-tests"
 import ProgressOverview from "./progress-overview"
 
-export default function DashboardContent({ user }: { user: any }) {
+export default function DashboardContent({ userId, email }: { userId: string; email: string }) {
+  const router = useRouter()
   const [activeSection, setActiveSection] = useState("overview")
+  const [stats, setStats] = useState<any>(null)
+  const [courses, setCourses] = useState<any[]>([])
+  const [loadingCourses, setLoadingCourses] = useState(false)
+  const [coursesLoaded, setCoursesLoaded] = useState(false)
+
+  useEffect(() => {
+    fetchStats()
+  }, [])
+
+  useEffect(() => {
+    // prefetch explore courses when dashboard mounts
+    if (!coursesLoaded) loadExploreCourses()
+  }, [])
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/student/progress")
+      if (res.ok) {
+        const data = await res.json()
+        setStats(data.stats)
+      }
+    } catch (error) {
+      console.error("[v0] Error fetching stats:", error)
+    }
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
+
+  const loadExploreCourses = async () => {
+    setLoadingCourses(true)
+    try {
+      const res = await fetch("/api/courses")
+      if (res.ok) {
+        const data = await res.json()
+        setCourses(data.courses || data.courses || [])
+      }
+    } catch (err) {
+      console.error("[v0] Error loading courses:", err)
+    } finally {
+      setLoadingCourses(false)
+      setCoursesLoaded(true)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -19,19 +65,19 @@ export default function DashboardContent({ user }: { user: any }) {
         <div className="flex items-center justify-between px-6 md:px-12 py-4">
           <div className="flex items-center gap-2">
             <BookOpen className="w-8 h-8 text-blue-600" />
-            <span className="text-2xl font-bold text-slate-900">LearnWithMaria</span>
+            <span className="text-2xl font-bold text-slate-900">LinguaFlow</span>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="hidden md:flex items-center gap-3">
               <div className="text-right">
-                <p className="text-sm font-semibold text-slate-900">{user.full_name}</p>
-                <p className="text-xs text-slate-500 capitalize">{user.role}</p>
+                <p className="text-sm font-semibold text-slate-900">{email}</p>
+                <p className="text-xs text-slate-500">Student</p>
               </div>
             </div>
 
             <button
-              onClick={async () => await signOut()}
+              onClick={handleSignOut}
               className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 transition"
             >
               <LogOut className="w-4 h-4" />
@@ -51,45 +97,78 @@ export default function DashboardContent({ user }: { user: any }) {
             <div className="space-y-8">
               {/* Header */}
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Welcome back, {user.full_name}!</h1>
+                <h1 className="text-3xl md:text-4xl font-bold text-slate-900 mb-2">Welcome back!</h1>
                 <p className="text-lg text-slate-600">Continue your learning journey</p>
               </div>
 
               {/* Quick Stats */}
-              <div className="grid md:grid-cols-4 gap-6">
-                <div className="bg-white rounded-lg p-6 border border-slate-200">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">3</div>
-                  <p className="text-slate-600">Active Courses</p>
+              {stats && (
+                <div className="grid md:grid-cols-4 gap-6">
+                  <div className="bg-white rounded-lg p-6 border border-slate-200">
+                    <div className="text-3xl font-bold text-blue-600 mb-2">{stats.enrolledCourses}</div>
+                    <p className="text-slate-600">Enrolled Courses</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-6 border border-slate-200">
+                    <div className="text-3xl font-bold text-green-600 mb-2">{stats.completedLessons}</div>
+                    <p className="text-slate-600">Lessons Completed</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-6 border border-slate-200">
+                    <div className="text-3xl font-bold text-purple-600 mb-2">{stats.quizAttempts}</div>
+                    <p className="text-slate-600">Tests Attempted</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-6 border border-slate-200">
+                    <div className="text-3xl font-bold text-orange-600 mb-2">{stats.minutesLearned}</div>
+                    <p className="text-slate-600">Minutes Learned</p>
+                  </div>
                 </div>
-                <div className="bg-white rounded-lg p-6 border border-slate-200">
-                  <div className="text-3xl font-bold text-green-600 mb-2">42%</div>
-                  <p className="text-slate-600">Overall Progress</p>
-                </div>
-                <div className="bg-white rounded-lg p-6 border border-slate-200">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">12</div>
-                  <p className="text-slate-600">Tests Completed</p>
-                </div>
-                <div className="bg-white rounded-lg p-6 border border-slate-200">
-                  <div className="text-3xl font-bold text-orange-600 mb-2">7.2</div>
-                  <p className="text-slate-600">Band Score</p>
-                </div>
-              </div>
+              )}
 
               {/* Progress Overview */}
-              <ProgressOverview />
+              <ProgressOverview userId={userId} />
 
               {/* Enrolled Courses */}
-              <EnrolledCourses />
+              <EnrolledCourses userId={userId} />
 
-              {/* Recent Tests */}
-              <RecentTests />
+              {/* Recent Tests component removed (was undefined) */}
             </div>
           )}
 
           {activeSection === "courses" && (
             <div>
               <h1 className="text-3xl font-bold text-slate-900 mb-8">My Courses</h1>
-              <EnrolledCourses />
+              <EnrolledCourses userId={userId} />
+            </div>
+          )}
+
+          {activeSection === "explore" && (
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-8">Explore Courses</h1>
+              <p className="text-slate-600 mb-4">Browse all available courses</p>
+
+              {loadingCourses ? (
+                <p className="text-slate-600">Loading courses...</p>
+              ) : (
+                <div className="grid md:grid-cols-3 gap-6">
+                  {courses.map((c: any) => (
+                    <div key={c._id ?? c.slug} className="bg-white rounded-lg border border-slate-200 p-4">
+                      <div className="aspect-video w-full bg-slate-200 mb-4 overflow-hidden rounded">
+                        <img src={c.thumbnailUrl || "/placeholder.svg?height=200&width=400"} className="w-full h-full object-cover" />
+                      </div>
+                      <h3 className="font-semibold text-lg text-slate-900 mb-2">{c.title}</h3>
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-2">{c.description}</p>
+                      <div className="flex items-center justify-between">
+                        <Link
+                          href={`/courses/${c.slug}`}
+                          className="text-sm text-blue-600 font-medium hover:underline"
+                        >
+                          View Course
+                        </Link>
+                        <span className="text-sm text-slate-500">{(c.modules || []).length} modules</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -121,7 +200,7 @@ export default function DashboardContent({ user }: { user: any }) {
           {activeSection === "progress" && (
             <div>
               <h1 className="text-3xl font-bold text-slate-900 mb-8">Learning Progress</h1>
-              <ProgressOverview />
+              <ProgressOverview userId={userId} />
             </div>
           )}
         </main>

@@ -8,7 +8,7 @@ export default function LandingPage() {
       <nav className="flex items-center justify-between px-6 py-4 md:px-12 md:py-6">
         <div className="flex items-center gap-2">
           <BookOpen className="w-8 h-8 text-blue-600" />
-          <span className="text-2xl font-bold text-slate-900">LearnWithMaria</span>
+          <span className="text-2xl font-bold text-slate-900">LinguaFlow</span>
         </div>
         <div className="flex items-center gap-4">
           <Link href="/login" className="text-slate-600 hover:text-slate-900 font-medium transition">
@@ -201,7 +201,7 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <BookOpen className="w-6 h-6 text-blue-400" />
-                <span className="font-bold text-white">LearnWithMaria</span>
+                <span className="font-bold text-white">LinguaFlow</span>
               </div>
               <p className="text-sm">Expert-led language learning for IELTS and OET.</p>
             </div>
@@ -267,7 +267,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-slate-800 pt-8 text-center text-sm">
-            <p>&copy; 2025 LearnWithMaria. All rights reserved.</p>
+            <p>&copy; 2025 LinguaFlow. All rights reserved.</p>
           </div>
         </div>
       </footer>

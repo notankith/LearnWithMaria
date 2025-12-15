@@ -1,13 +1,13 @@
-import { getCurrentUser } from "@/app/actions/auth"
-import { redirect } from "next/navigation"
+import { getSession } from "@/lib/session"
 import AdminDashboard from "@/components/admin/admin-dashboard"
+import AdminLoginForm from "@/components/admin/admin-login-form"
 
 export default async function AdminPage() {
-  const user = await getCurrentUser()
+  const session = await getSession()
 
-  if (!user || (user.role !== "admin" && user.role !== "instructor")) {
-    redirect("/dashboard")
+  if (!session || (session.role !== "admin" && session.role !== "superadmin")) {
+    return <AdminLoginForm />
   }
 
-  return <AdminDashboard user={user} />
+  return <AdminDashboard role={session.role} userId={session.userId} />
 }
