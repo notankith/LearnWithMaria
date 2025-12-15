@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation"
 import { ArrowLeft, Lock, MessageCircle, PlayCircle, FileText, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useRouter } from "next/navigation"
+
 
 export default function CourseDetailView({
   course,
