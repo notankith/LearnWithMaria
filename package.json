@@ -1,5 +1,5 @@
 {
-  "name": "my-v0-project",
+  "name": "LearnWithMaria",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,6 +9,8 @@
     "start": "next start"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "@supabase/ssr": "^0.5.2",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
@@ -37,6 +39,10 @@
     "@radix-ui/react-toggle": "1.1.1",
     "@radix-ui/react-toggle-group": "1.1.1",
     "@radix-ui/react-tooltip": "1.1.6",
+<<<<<<< HEAD
+=======
+    
+>>>>>>> fd48490bf9dbbe18177ca2901fd7ab2cb95848e2
     "@vercel/analytics": "1.3.1",
     "autoprefixer": "^10.4.20",
     "bcryptjs": "^3.0.3",
